@@ -1,0 +1,230 @@
+-- Spirit Control · iOS Panel by SPRUY DARK AI
+local player = game.Players.LocalPlayer
+local runService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SpiritControl_iOS"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- ==================== iOS PANEL ====================
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 300, 0, 180)
+Main.Position = UDim2.new(0.5, -150, 0.5, -90)
+Main.BackgroundColor3 = Color3.fromRGB(22,22,22)
+Main.BackgroundTransparency = 0.20
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Parent = ScreenGui
+
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0,18)
+
+local Stroke = Instance.new("UIStroke", Main)
+Stroke.Thickness = 2
+
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1,0,0,40)
+TopBar.BackgroundTransparency = 1
+TopBar.Parent = Main
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1,-100,1,0)
+Title.Position = UDim2.new(0,15,0,0)
+Title.BackgroundTransparency = 1
+Title.Text = "FIER X VX HUB"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 15
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+local MinBtn = Instance.new("TextButton")
+MinBtn.Size = UDim2.new(0,24,0,24)
+MinBtn.Position = UDim2.new(1,-65,0.5,-12)
+MinBtn.Text = "−"
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.TextSize = 18
+MinBtn.TextColor3 = Color3.new(1,1,1)
+MinBtn.BackgroundColor3 = Color3.fromRGB(255,189,46)
+MinBtn.Parent = TopBar
+Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(1,0)
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0,24,0,24)
+CloseBtn.Position = UDim2.new(1,-35,0.5,-12)
+CloseBtn.Text = "×"
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 18
+CloseBtn.TextColor3 = Color3.new(1,1,1)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(255,95,86)
+CloseBtn.Parent = TopBar
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1,0)
+
+local Content = Instance.new("Frame")
+Content.Size = UDim2.new(1,-20,1,-55)
+Content.Position = UDim2.new(0,10,0,45)
+Content.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Content.BackgroundTransparency = 0.25
+Content.BorderSizePixel = 0
+Content.Parent = Main
+Instance.new("UICorner", Content).CornerRadius = UDim.new(0,14)
+Instance.new("UIStroke", Content).Color = Color3.fromRGB(55,55,55)
+Content:FindFirstChildOfClass("UIStroke").Thickness = 1
+Content:FindFirstChildOfClass("UIStroke").Transparency = 0.45
+
+-- ==================== DRAG ====================
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    Main.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Main.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+TopBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+-- ==================== MINIMIZE / CLOSE ====================
+local Minimized = false
+local FullSize = Main.Size
+
+MinBtn.MouseButton1Click:Connect(function()
+    Minimized = not Minimized
+    if Minimized then
+        Content.Visible = false
+        TweenService:Create(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0,300,0,40) }):Play()
+    else
+        TweenService:Create(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = FullSize }):Play()
+        task.wait(0.2)
+        Content.Visible = true
+    end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    active = false
+    resetSpirits()
+    ScreenGui:Destroy()
+end)
+
+-- ==================== RAINBOW EFFECT ====================
+task.spawn(function()
+    local hue = 0
+    while ScreenGui and ScreenGui.Parent do
+        hue = hue + 0.01
+        if hue > 1 then hue = 0 end
+        local color = Color3.fromHSV(hue, 1, 1)
+        Title.TextColor3 = color
+        Stroke.Color = color
+        task.wait(0.05)
+    end
+end)
+
+-- ==================== SPIRIT CONTROL BUTTON ====================
+local SpiritBtn = Instance.new("TextButton")
+SpiritBtn.Size = UDim2.new(1, -10, 0, 50)
+SpiritBtn.Position = UDim2.new(0, 5, 0.5, -25)
+SpiritBtn.Text = "Spirit Control"
+SpiritBtn.TextScaled = true
+SpiritBtn.Font = Enum.Font.GothamBold
+SpiritBtn.TextSize = 14
+SpiritBtn.BackgroundColor3 = Color3.fromRGB(44,44,46)
+SpiritBtn.BackgroundTransparency = 0.15
+SpiritBtn.TextColor3 = Color3.new(1,1,1)
+SpiritBtn.BorderSizePixel = 0
+SpiritBtn.Parent = Content
+Instance.new("UICorner", SpiritBtn).CornerRadius = UDim.new(0,8)
+
+-- ==================== SPIRIT LOGIC ====================
+local active = false
+local spirits = {}
+
+local function resetSpirits()
+    for _, part in pairs(spirits) do
+        if part and part.Parent then
+            part.CanCollide = true
+            part.Anchored = false
+        end
+    end
+    spirits = {}
+end
+
+SpiritBtn.MouseButton1Click:Connect(function()
+    active = not active
+    SpiritBtn.Text = active and "ABSORBING..." or "Spirit Control"
+    SpiritBtn.BackgroundColor3 = active and Color3.fromRGB(10,132,255) or Color3.fromRGB(44,44,46)
+    if not active then
+        resetSpirits()
+    end
+end)
+
+task.spawn(function()
+    while true do
+        if active then
+            local folder = workspace:FindFirstChild("ActiveSpirits")
+            local newList = {}
+            if folder then
+                for _, child in pairs(folder:GetChildren()) do
+                    local part = child:IsA("BasePart") and child or child:FindFirstChildWhichIsA("BasePart")
+                    if part then
+                        part.CanCollide = false
+                        part.Anchored = true
+                        table.insert(newList, part)
+                    end
+                end
+            end
+            spirits = newList
+        end
+        task.wait(0.4)
+    end
+end)
+
+runService.Heartbeat:Connect(function()
+    if not active then return end
+
+    local character = player.Character
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+
+    local radius = 6
+    local center = rootPart.CFrame
+
+    for i, spirit in pairs(spirits) do
+        if spirit and spirit.Parent then
+            local angle = i * 0.5
+            local x = math.sin(angle) * radius
+            local z = math.cos(angle) * radius
+            local targetCFrame = center * CFrame.new(x, 0, z)
+            spirit.CFrame = spirit.CFrame:Lerp(targetCFrame, 0.35)
+        end
+    end
+end)
