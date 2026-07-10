@@ -1,0 +1,270 @@
+-- AIKOO BERAK • EXTREME SLIDING (Urut r25_c1 → r273_cMax, batch per frame)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+-- GUI Setup
+local gui = Instance.new("ScreenGui")
+gui.Name = "DarkSliding"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local C = {
+    BG1 = Color3.fromRGB(28,28,30),
+    BG2 = Color3.fromRGB(44,44,46),
+    BLUE = Color3.fromRGB(10,132,255),
+    RED = Color3.fromRGB(255,69,58),
+    WHITE = Color3.fromRGB(255,255,255)
+}
+
+local function Corner(obj, r)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, r)
+    c.Parent = obj
+end
+
+-- Main
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 230, 0, 170)
+main.Position = UDim2.new(0.5, -115, 0.5, -85)
+main.BackgroundColor3 = C.BG1
+main.BackgroundTransparency = 0.15
+main.BorderSizePixel = 0
+main.Active = true
+main.Parent = gui
+Corner(main, 22)
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255,255,255)
+stroke.Thickness = 1
+stroke.Transparency = 0.93
+stroke.Parent = main
+
+-- Header
+local header = Instance.new("Frame")
+header.Size = UDim2.new(0, 150, 0, 24)
+header.Position = UDim2.new(0.5, -75, 0, 10)
+header.BackgroundColor3 = C.BG2
+header.BackgroundTransparency = 0.15
+header.BorderSizePixel = 0
+header.Parent = main
+Corner(header, 999)
+
+local headerStroke = Instance.new("UIStroke")
+headerStroke.Color = Color3.fromRGB(255,255,255)
+headerStroke.Transparency = 0.94
+headerStroke.Parent = header
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,1,0)
+title.BackgroundTransparency = 1
+title.Text = "AIKOO LAGI BERAK"
+title.Font = Enum.Font.BuilderSansBold
+title.TextSize = 13
+title.TextColor3 = C.WHITE
+title.Parent = header
+
+-- Status label
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -30, 0, 40)
+statusLabel.Position = UDim2.new(0, 15, 0, 45)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Men-scan..."
+statusLabel.TextColor3 = Color3.fromRGB(200,200,200)
+statusLabel.Font = Enum.Font.BuilderSans
+statusLabel.TextSize = 12
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.TextWrapped = true
+statusLabel.Parent = main
+
+-- Batch size input
+local batchLabel = Instance.new("TextLabel")
+batchLabel.Size = UDim2.new(0, 80, 0, 20)
+batchLabel.Position = UDim2.new(0, 15, 0, 90)
+batchLabel.BackgroundTransparency = 1
+batchLabel.Text = "Batch/frame:"
+batchLabel.TextColor3 = Color3.fromRGB(200,200,200)
+batchLabel.Font = Enum.Font.BuilderSans
+batchLabel.TextSize = 11
+batchLabel.TextXAlignment = Enum.TextXAlignment.Left
+batchLabel.Parent = main
+
+local batchBox = Instance.new("TextBox")
+batchBox.Size = UDim2.new(0, 50, 0, 22)
+batchBox.Position = UDim2.new(0, 100, 0, 89)
+batchBox.BackgroundColor3 = C.BG2
+batchBox.BackgroundTransparency = 0.15
+batchBox.Text = "200"
+batchBox.TextColor3 = C.WHITE
+batchBox.Font = Enum.Font.BuilderSans
+batchBox.TextSize = 13
+batchBox.BorderSizePixel = 0
+batchBox.Parent = main
+Corner(batchBox, 8)
+
+-- Start/Stop button
+local actionBtn = Instance.new("TextButton")
+actionBtn.Size = UDim2.new(1, -40, 0, 34)
+actionBtn.Position = UDim2.new(0, 20, 1, -48)
+actionBtn.BackgroundColor3 = C.BLUE
+actionBtn.BackgroundTransparency = 0.15
+actionBtn.Text = "START SLIDING"
+actionBtn.TextColor3 = C.WHITE
+actionBtn.Font = Enum.Font.BuilderSansBold
+actionBtn.TextSize = 13
+actionBtn.BorderSizePixel = 0
+actionBtn.Parent = main
+Corner(actionBtn, 18)
+
+-- Close
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 22, 0, 22)
+closeBtn.Position = UDim2.new(1, -28, 0, 8)
+closeBtn.BackgroundColor3 = C.RED
+closeBtn.Text = "×"
+closeBtn.TextColor3 = C.WHITE
+closeBtn.Font = Enum.Font.BuilderSansBold
+closeBtn.TextSize = 14
+closeBtn.BorderSizePixel = 0
+closeBtn.Parent = main
+Corner(closeBtn, 11)
+
+-- ============ SCAN + SORT ============
+local targets = {}
+local function extractNumbers(name)
+    local r, c = name:match("Key_r(%d+)_c(%d+)")
+    if r and c then
+        return tonumber(r), tonumber(c)
+    end
+    return nil, nil
+end
+
+local keyboard = workspace:FindFirstChild("Keyboard")
+if keyboard then
+    for _, obj in ipairs(keyboard:GetChildren()) do
+        if obj:IsA("BasePart") then
+            local rNum, cNum = extractNumbers(obj.Name)
+            if rNum and cNum then
+                table.insert(targets, {part = obj, r = rNum, c = cNum})
+            end
+        end
+    end
+end
+
+table.sort(targets, function(a, b)
+    if a.r == b.r then return a.c < b.c else return a.r < b.r end
+end)
+
+local sortedParts = {}
+for _, data in ipairs(targets) do
+    table.insert(sortedParts, data.part)
+end
+
+statusLabel.Text = #sortedParts .. " target\nUrut r25 → r273 (Extreme Slide)"
+
+-- ============ SLIDE ENGINE ============
+local running = false
+local slideCoroutine = nil
+
+local function stopSlide()
+    running = false
+    if slideCoroutine then
+        coroutine.close(slideCoroutine)
+        slideCoroutine = nil
+    end
+    actionBtn.Text = "START SLIDING"
+    actionBtn.BackgroundColor3 = C.BLUE
+end
+
+local function startSlide()
+    if #sortedParts == 0 then
+        statusLabel.Text = "❌ Tidak ada target!"
+        return
+    end
+    if running then return end
+
+    local batch = tonumber(batchBox.Text)
+    if not batch or batch <= 0 then batch = 200 end
+    batch = math.max(1, batch)  -- minimal 1
+
+    running = true
+    actionBtn.Text = "STOP"
+    actionBtn.BackgroundColor3 = C.RED
+
+    slideCoroutine = coroutine.create(function()
+        local idx = 1
+        local total = #sortedParts
+        while running and idx <= total do
+            local batchEnd = math.min(idx + batch - 1, total)
+            for i = idx, batchEnd do
+                local targetPart = sortedParts[i]
+                if targetPart and targetPart.Parent then
+                    if not character or not character.Parent then
+                        character = player.Character
+                        if character then rootPart = character:FindFirstChild("HumanoidRootPart") end
+                    end
+                    if rootPart then
+                        rootPart.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+                    end
+                end
+            end
+            idx = batchEnd + 1
+            -- Update status
+            statusLabel.Text = string.format("Sliding... %d/%d (%.1f%%)", idx-1, total, (idx-1)/total*100)
+            -- Yield 1 frame agar tidak timeout + efek sliding
+            task.wait()
+        end
+        running = false
+        slideCoroutine = nil
+        actionBtn.Text = "START SLIDING"
+        actionBtn.BackgroundColor3 = C.BLUE
+        statusLabel.Text = "✅ SELESAI " .. total .. " target"
+    end)
+    coroutine.resume(slideCoroutine)
+end
+
+actionBtn.MouseButton1Click:Connect(function()
+    if running then
+        stopSlide()
+    else
+        startSlide()
+    end
+end)
+
+-- DRAG
+local dragging = false
+local dragStart, startPos
+main.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- CLOSE
+closeBtn.MouseButton1Click:Connect(function()
+    stopSlide()
+    gui:Destroy()
+end)
+
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+    rootPart = newChar:WaitForChild("HumanoidRootPart")
+end)
